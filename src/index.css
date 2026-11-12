@@ -1,0 +1,148 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------
+   Accent themes
+   Every accent utility in the app resolves to these CSS variables,
+   so switching [data-theme] on <html> recolours the whole UI.
+   --------------------------------------------------------------- */
+:root {
+  color-scheme: dark;
+
+  /* Emerald (default) */
+  --brand-300: 110 231 183;
+  --brand-400: 52 211 153;
+  --brand-500: 16 185 129;
+  --brand-600: 5 150 105;
+
+  --brand2-400: 45 212 191;
+  --brand2-500: 20 184 166;
+  --brand2-600: 13 148 136;
+}
+
+/* ---------------------------------------------------------------
+   Page backgrounds
+   The ambient glows are separate from the accent palette, so the
+   user can pick a background without changing button colours.
+   --------------------------------------------------------------- */
+:root {
+  --bg-glow-1: 5 150 105;
+  --bg-glow-2: 20 184 166;
+  --bg-glow-3: 13 148 136;
+  --bg-grid-opacity: 0.04;
+  --bg-base: 2 6 23;
+}
+
+[data-bg="midnight"] {
+  --bg-glow-1: 67 56 202;
+  --bg-glow-2: 14 165 233;
+  --bg-glow-3: 30 64 175;
+  --bg-grid-opacity: 0.035;
+  --bg-base: 8 11 31;
+}
+
+[data-bg="sunset"] {
+  --bg-glow-1: 234 88 12;
+  --bg-glow-2: 219 39 119;
+  --bg-glow-3: 190 24 93;
+  --bg-grid-opacity: 0.03;
+  --bg-base: 20 8 15;
+}
+
+[data-bg="forest"] {
+  --bg-glow-1: 21 128 61;
+  --bg-glow-2: 52 211 153;
+  --bg-glow-3: 6 78 59;
+  --bg-grid-opacity: 0.04;
+  --bg-base: 4 18 12;
+}
+
+[data-bg="graphite"] {
+  --bg-glow-1: 71 85 105;
+  --bg-glow-2: 100 116 139;
+  --bg-glow-3: 30 41 59;
+  --bg-grid-opacity: 0.02;
+  --bg-base: 11 15 20;
+}
+
+[data-theme="ocean"] {
+  --brand-300: 125 211 252;
+  --brand-400: 56 189 248;
+  --brand-500: 14 165 233;
+  --brand-600: 2 132 199;
+
+  --brand2-400: 34 211 238;
+  --brand2-500: 6 182 212;
+  --brand2-600: 8 145 178;
+}
+
+[data-theme="violet"] {
+  --brand-300: 196 181 253;
+  --brand-400: 167 139 250;
+  --brand-500: 139 92 246;
+  --brand-600: 124 58 237;
+
+  --brand2-400: 192 132 252;
+  --brand2-500: 168 85 247;
+  --brand2-600: 147 51 234;
+}
+
+[data-theme="sunset"] {
+  --brand-300: 253 186 116;
+  --brand-400: 251 146 60;
+  --brand-500: 249 115 22;
+  --brand-600: 234 88 12;
+
+  --brand2-400: 251 191 36;
+  --brand2-500: 245 158 11;
+  --brand2-600: 217 119 6;
+}
+
+[data-theme="rose"] {
+  --brand-300: 253 164 175;
+  --brand-400: 251 113 133;
+  --brand-500: 244 63 94;
+  --brand-600: 225 29 72;
+
+  --brand2-400: 244 114 182;
+  --brand2-500: 236 72 153;
+  --brand2-600: 219 39 119;
+}
+
+/* Reduced motion preference from the settings drawer */
+[data-motion="reduced"] *,
+[data-motion="reduced"] *::before,
+[data-motion="reduced"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(var(--brand-400) / 0.4); }
+  50% { box-shadow: 0 0 0 14px rgb(var(--brand-400) / 0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
