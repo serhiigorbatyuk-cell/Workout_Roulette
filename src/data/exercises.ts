@@ -75,6 +75,8 @@ const ALL_IDS: ExerciseId[] = [
   "tPushups",
 ];
 
+const ALL_ID_SET = new Set<string>(ALL_IDS);
+
 const ICONS: Record<ExerciseId, LucideIcon> = {
   squats: PersonStanding,
   plank: Activity,
@@ -308,6 +310,18 @@ function createExercise(id: ExerciseId, difficulty: Difficulty): Exercise {
     mode,
     seconds: PRESETS[difficulty].timeScale,
   };
+}
+
+export function isExerciseId(value: unknown): value is ExerciseId {
+  return typeof value === "string" && ALL_ID_SET.has(value);
+}
+
+/** Rebuilds a workout from stored ids (used by the recent-history panel). */
+export function buildWorkoutFromIds(
+  ids: ExerciseId[],
+  difficulty: Difficulty,
+): Exercise[] {
+  return ids.map((id) => createExercise(id, difficulty));
 }
 
 /**

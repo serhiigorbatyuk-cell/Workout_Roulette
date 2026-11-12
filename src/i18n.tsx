@@ -59,6 +59,15 @@ export interface Dict {
     minutes: string;
     clear: string;
   };
+  history: {
+    title: string;
+    subtitle: string;
+    clear: string;
+    load: string;
+    exercises: string;
+    showDetails: string;
+    hideDetails: string;
+  };
   footer: string;
   exercise: string;
   sec: string;
@@ -207,6 +216,15 @@ const uk: Dict = {
     workouts: "Тренувань",
     minutes: "Хвилин",
     clear: "Очистити історію",
+  },
+  history: {
+    title: "Історія тренувань",
+    subtitle: "Останні обрані тренування",
+    clear: "Очистити історію тренувань",
+    load: "Показати",
+    exercises: "Вправи",
+    showDetails: "Показати вправи",
+    hideDetails: "Сховати вправи",
   },
   footer: "Workout Roulette — тренуйся вдома без підготовки",
   exercise: "Вправа",
@@ -492,6 +510,15 @@ const en: Dict = {
     minutes: "Minutes",
     clear: "Clear history",
   },
+  history: {
+    title: "Workout history",
+    subtitle: "Your recently selected workouts",
+    clear: "Clear workout history",
+    load: "View",
+    exercises: "Exercises",
+    showDetails: "Show exercises",
+    hideDetails: "Hide exercises",
+  },
   footer: "Workout Roulette — train at home with no prep",
   exercise: "Exercise",
   reroll: "Swap exercise",
@@ -733,6 +760,15 @@ const pl: Dict = {
     workouts: "Treningi",
     minutes: "Minuty",
     clear: "Wyczyść historię",
+  },
+  history: {
+    title: "Historia treningów",
+    subtitle: "Ostatnio wybrane treningi",
+    clear: "Wyczyść historię treningów",
+    load: "Pokaż",
+    exercises: "Ćwiczenia",
+    showDetails: "Pokaż ćwiczenia",
+    hideDetails: "Ukryj ćwiczenia",
   },
   footer: "Workout Roulette — trenuj w domu bez przygotowań",
   exercise: "Ćwiczenie",
@@ -976,6 +1012,15 @@ const de: Dict = {
     workouts: "Workouts",
     minutes: "Minuten",
     clear: "Verlauf löschen",
+  },
+  history: {
+    title: "Trainingsverlauf",
+    subtitle: "Deine zuletzt gewählten Trainings",
+    clear: "Trainingsverlauf löschen",
+    load: "Anzeigen",
+    exercises: "Übungen",
+    showDetails: "Übungen anzeigen",
+    hideDetails: "Übungen ausblenden",
   },
   footer: "Workout Roulette — trainiere zu Hause ohne Vorbereitung",
   exercise: "Übung",
@@ -1226,6 +1271,15 @@ const es: Dict = {
     workouts: "Entrenamientos",
     minutes: "Minutos",
     clear: "Borrar historial",
+  },
+  history: {
+    title: "Historial de entrenamientos",
+    subtitle: "Tus entrenamientos recientes",
+    clear: "Borrar historial de entrenamientos",
+    load: "Ver",
+    exercises: "Ejercicios",
+    showDetails: "Mostrar ejercicios",
+    hideDetails: "Ocultar ejercicios",
   },
   footer: "Workout Roulette — entrena en casa sin preparación",
   exercise: "Ejercicio",
@@ -1482,6 +1536,15 @@ const fr: Dict = {
     workouts: "Entraînements",
     minutes: "Minutes",
     clear: "Effacer l'historique",
+  },
+  history: {
+    title: "Historique des entraînements",
+    subtitle: "Tes derniers entraînements",
+    clear: "Effacer l'historique des entraînements",
+    load: "Voir",
+    exercises: "Exercices",
+    showDetails: "Afficher les exercices",
+    hideDetails: "Masquer les exercices",
   },
   footer: "Workout Roulette — entraîne-toi à la maison sans préparation",
   exercise: "Exercice",

@@ -15,6 +15,7 @@ import {
 import {
   generateWorkout,
   generateDifferentWorkout,
+  buildWorkoutFromIds,
   pickExercise,
   DIFFICULTIES,
   WORKOUT_TYPES,
@@ -41,8 +42,14 @@ import { useI18n } from "@/i18n";
 import { usePreferences } from "@/preferences";
 import { useCustomMusic, useWorkoutMusic } from "@/music";
 import { useCustomTrack } from "@/customTrack";
-import { dayKey, useWorkoutHistory } from "@/history";
+import {
+  dayKey,
+  useRecentWorkouts,
+  useWorkoutHistory,
+  type RecentWorkout,
+} from "@/history";
 import { WorkoutStats } from "@/components/WorkoutStats";
+import { WorkoutHistory } from "@/components/WorkoutHistory";
 import { RestTimer } from "@/components/RestTimer";
 
 type AppState = "empty" | "success" | "error";
@@ -65,6 +72,7 @@ export default function App() {
 
   const { stats, record: recordWorkout, clear: clearHistory } =
     useWorkoutHistory();
+  const recent = useRecentWorkouts();
 
   const customTrack = useCustomTrack(prefs.customTrackId);
   const customActive =
@@ -165,11 +173,30 @@ export default function App() {
       ? Math.round((completedCount / workout.length) * 100)
       : 0;
 
-  function applyWorkout(next: Exercise[]) {
+  function applyWorkout(
+    next: Exercise[],
+    meta: {
+      type?: WorkoutType;
+      difficulty?: Difficulty;
+      record?: boolean;
+    } = {},
+  ) {
+    const nextType = meta.type ?? workoutType;
+    const nextDifficulty = meta.difficulty ?? difficulty;
+
     recordedRef.current = false;
     setWorkout(next);
     setCompleted(next.map(() => false));
     setState("success");
+
+    if (meta.record !== false && nextDifficulty && next.length > 0) {
+      recent.record({
+        type: nextType,
+        difficulty: nextDifficulty,
+        exerciseIds: next.map((exercise) => exercise.id),
+        minutes: estimateDuration(next),
+      });
+    }
   }
 
   function handleSpin() {
@@ -241,6 +268,7 @@ export default function App() {
     if (difficulty && state === "success") {
       applyWorkout(
         generateWorkout(difficulty, next, prefs.exerciseCount),
+        { type: next },
       );
     }
   }
@@ -260,14 +288,46 @@ export default function App() {
     );
     if (!replacement) return;
 
-    setWorkout((current) =>
-      current
-        ? current.map((exercise, i) => (i === index ? replacement : exercise))
-        : current,
+    const nextWorkout = workout.map((exercise, i) =>
+      i === index ? replacement : exercise,
     );
+
+    setWorkout(nextWorkout);
     setCompleted((current) =>
       current.map((done, i) => (i === index ? false : done)),
     );
+
+    recent.replace(
+      {
+        type: workoutType,
+        difficulty,
+        exerciseIds: workout.map((exercise) => exercise.id),
+        minutes: estimateDuration(workout),
+      },
+      {
+        type: workoutType,
+        difficulty,
+        exerciseIds: nextWorkout.map((exercise) => exercise.id),
+        minutes: estimateDuration(nextWorkout),
+      },
+    );
+  }
+
+  function handleLoadHistory(entry: RecentWorkout) {
+    if (spinning) return;
+
+    const loaded = buildWorkoutFromIds(entry.exerciseIds, entry.difficulty);
+    if (loaded.length === 0) return;
+
+    setDifficulty(entry.difficulty);
+    setWorkoutType(entry.type);
+    setShareFeedback(false);
+    applyWorkout(loaded, {
+      type: entry.type,
+      difficulty: entry.difficulty,
+      record: false,
+    });
+    outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   // Record a workout once, as soon as every exercise is marked as done.
@@ -664,6 +724,12 @@ export default function App() {
             </>
           )}
         </div>
+
+        <WorkoutHistory
+          entries={recent.entries}
+          onLoad={handleLoadHistory}
+          onClear={recent.clear}
+        />
 
         <WorkoutStats stats={stats} onClear={clearHistory} />
 
