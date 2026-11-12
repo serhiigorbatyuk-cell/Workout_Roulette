@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import {
   generateWorkout,
+  generateDifferentWorkout,
   pickExercise,
   DIFFICULTIES,
   WORKOUT_TYPES,
@@ -180,12 +181,21 @@ export default function App() {
       selectRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
+    const previous = workout;
     setSpinning(true);
     setState("empty");
     setWorkout(null);
+    setCompleted([]);
     setTimeout(() => {
       applyWorkout(
-        generateWorkout(difficulty, workoutType, prefs.exerciseCount),
+        previous
+          ? generateDifferentWorkout(
+              previous,
+              difficulty,
+              workoutType,
+              prefs.exerciseCount,
+            )
+          : generateWorkout(difficulty, workoutType, prefs.exerciseCount),
       );
       setSpinning(false);
     }, 650);

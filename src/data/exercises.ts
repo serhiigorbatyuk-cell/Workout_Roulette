@@ -201,13 +201,12 @@ export const MAX_EXERCISES = 5;
 export const EXERCISE_COUNTS = [3, 4, 5] as const;
 export type ExerciseCount = (typeof EXERCISE_COUNTS)[number];
 
-export function generateWorkout(
+/** Builds the exact pool a workout of this type/level may draw from. */
+function buildPool(
   difficulty: Difficulty,
-  type: WorkoutType = "fullBody",
-  count: number = MIN_EXERCISES,
-  /** Optional seed: with a seed the result is fully deterministic. */
-  seed?: string,
-): Exercise[] {
+  type: WorkoutType,
+  count: number,
+): ExerciseId[] {
   const preset = PRESETS[difficulty];
   let pool = TYPE_POOLS[type].filter((id) => preset.pool.includes(id));
 
@@ -217,11 +216,84 @@ export function generateWorkout(
     pool = [...pool, ...preset.pool.filter((id) => !pool.includes(id))];
   }
 
+  return pool;
+}
+
+export function generateWorkout(
+  difficulty: Difficulty,
+  type: WorkoutType = "fullBody",
+  count: number = MIN_EXERCISES,
+  /** Optional seed: with a seed the result is fully deterministic. */
+  seed?: string,
+): Exercise[] {
+  const pool = buildPool(difficulty, type, count);
   const wanted = Math.max(1, Math.min(count, pool.length));
   const random = createRandom(seed);
   const picked = shuffle(pool, random).slice(0, wanted);
 
   return picked.map((id) => createExercise(id, difficulty));
+}
+
+function workoutKey(workout: Exercise[]): string {
+  return workout
+    .map((exercise) => exercise.id)
+    .sort()
+    .join("|");
+}
+
+/**
+ * Generates a workout that is not identical to the current one. It first tries
+ * random spins (preferring a set with no shared exercises), then forces a swap
+ * when the pool still has an unused exercise. If the pool is completely used,
+ * only the order can change.
+ */
+export function generateDifferentWorkout(
+  current: Exercise[],
+  difficulty: Difficulty,
+  type: WorkoutType = "fullBody",
+  count: number = current.length,
+): Exercise[] {
+  if (current.length === 0 || current.length !== count) {
+    return generateWorkout(difficulty, type, count);
+  }
+
+  const currentKey = workoutKey(current);
+  const currentIds = new Set(current.map((exercise) => exercise.id));
+  const pool = buildPool(difficulty, type, count);
+
+  let best: Exercise[] | null = null;
+  let bestOverlap = Infinity;
+
+  for (let attempt = 0; attempt < 32; attempt += 1) {
+    const next = generateWorkout(difficulty, type, count);
+    if (next.length !== count) continue;
+
+    const overlap = next.filter((exercise) =>
+      currentIds.has(exercise.id),
+    ).length;
+    if (overlap === 0) return next;
+
+    if (overlap < bestOverlap) {
+      best = next;
+      bestOverlap = overlap;
+    }
+  }
+
+  if (best && workoutKey(best) !== currentKey) return best;
+
+  // Force at least one new exercise from the same pool.
+  const available = pool.filter((id) => !currentIds.has(id));
+  if (available.length > 0) {
+    const replacementId =
+      available[Math.floor(Math.random() * available.length)];
+    const index = Math.floor(Math.random() * current.length);
+    return current.map((exercise, i) =>
+      i === index ? createExercise(replacementId, difficulty) : exercise,
+    );
+  }
+
+  // Every exercise of the pool is already used — only the order can change.
+  return shuffle(current, Math.random);
 }
 
 function createExercise(id: ExerciseId, difficulty: Difficulty): Exercise {
