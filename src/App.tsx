@@ -42,6 +42,7 @@ import { useI18n } from "@/i18n";
 import { usePreferences } from "@/preferences";
 import { useCustomMusic, useWorkoutMusic } from "@/music";
 import { useCustomTrack } from "@/customTrack";
+import { useSpotify } from "@/spotify";
 import {
   dayKey,
   useRecentWorkouts,
@@ -86,6 +87,11 @@ export default function App() {
   useCustomMusic(
     prefs.music && customActive,
     customTrack.url,
+    prefs.musicVolume,
+  );
+
+  const spotify = useSpotify(
+    prefs.music && prefs.musicSource === "spotify",
     prefs.musicVolume,
   );
 
@@ -757,6 +763,7 @@ export default function App() {
         onSelectTrack={handleSelectTrack}
         onRemoveTrack={handleRemoveTrack}
         onClearTrackError={customTrack.clearError}
+        spotify={spotify}
       />
     </div>
   );

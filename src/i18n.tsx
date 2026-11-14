@@ -104,6 +104,39 @@ export interface Dict {
     removeTrack: string;
     trackHint: string;
     trackErrors: Record<CustomTrackError, string>;
+    spotify: {
+      title: string;
+      setupTitle: string;
+      setupDesc: string;
+      clientId: string;
+      clientIdPlaceholder: string;
+      save: string;
+      redirectUri: string;
+      copy: string;
+      copied: string;
+      connect: string;
+      disconnect: string;
+      connectedAs: (name: string) => string;
+      search: string;
+      searchPlaceholder: string;
+      searching: string;
+      noResults: string;
+      tracks: string;
+      playlists: string;
+      nowPlaying: string;
+      play: string;
+      pause: string;
+      next: string;
+      previous: string;
+      premium: string;
+      notConfigured: string;
+      authError: string;
+      playbackError: string;
+      networkError: string;
+      noDevice: string;
+      playerStarting: string;
+      hint: string;
+    };
     motion: string;
     motionDesc: string;
     keepAwake: string;
@@ -275,6 +308,7 @@ const uk: Dict = {
     musicSources: {
       procedural: "Вбудовані",
       custom: "Мої треки",
+      spotify: "Spotify",
     },
     uploadTrack: "Завантажити свій трек",
     addTrack: "Додати трек",
@@ -287,6 +321,41 @@ const uk: Dict = {
       unsupported: "Це не аудіофайл. Обери MP3, WAV, OGG або M4A",
       tooMany: "Максимум 10 треків — видали зайвий",
       failed: "Не вдалося зберегти трек. Спробуй ще раз",
+    },
+    spotify: {
+      title: "Spotify",
+      setupTitle: "Підключення Spotify",
+      setupDesc:
+        "Створи застосунок на developer.spotify.com, встав його Client ID і додай наведений Redirect URI у налаштуваннях застосунку.",
+      clientId: "Client ID",
+      clientIdPlaceholder: "Встав Client ID застосунку",
+      save: "Зберегти",
+      redirectUri: "Redirect URI",
+      copy: "Копіювати",
+      copied: "Скопійовано",
+      connect: "Увійти через Spotify",
+      disconnect: "Від'єднати",
+      connectedAs: (name) => `Підключено: ${name}`,
+      search: "Пошук у Spotify",
+      searchPlaceholder: "Трек, виконавець або плейлист",
+      searching: "Шукаємо…",
+      noResults: "Нічого не знайдено",
+      tracks: "Треки",
+      playlists: "Плейлисти",
+      nowPlaying: "Зараз грає",
+      play: "Грати",
+      pause: "Пауза",
+      next: "Наступний",
+      previous: "Попередній",
+      premium: "Для відтворення у браузері потрібен Spotify Premium.",
+      notConfigured: "Спочатку збережи Client ID.",
+      authError: "Не вдалося підключитися до Spotify. Спробуй ще раз.",
+      playbackError:
+        "Не вдалося відтворити. Перевір, чи Spotify не зайнятий на іншому пристрої.",
+      networkError: "Помилка мережі. Перевір з'єднання.",
+      noDevice: "Плеєр ще не готовий. Зачекай кілька секунд.",
+      playerStarting: "Готуємо плеєр…",
+      hint: "Відтворення йде через офіційний Spotify Web Playback SDK.",
     },
     motion: "Менше анімацій",
     motionDesc: "Вимкнути зайві ефекти й рух",
@@ -568,6 +637,7 @@ const en: Dict = {
     musicSources: {
       procedural: "Built-in",
       custom: "My tracks",
+      spotify: "Spotify",
     },
     uploadTrack: "Upload your track",
     addTrack: "Add track",
@@ -580,6 +650,41 @@ const en: Dict = {
       unsupported: "That's not an audio file. Pick MP3, WAV, OGG or M4A",
       tooMany: "Up to 10 tracks — remove one first",
       failed: "Couldn't save the track. Please try again",
+    },
+    spotify: {
+      title: "Spotify",
+      setupTitle: "Connect Spotify",
+      setupDesc:
+        "Create an app at developer.spotify.com, paste its Client ID and add the Redirect URI below to the app settings.",
+      clientId: "Client ID",
+      clientIdPlaceholder: "Paste the app Client ID",
+      save: "Save",
+      redirectUri: "Redirect URI",
+      copy: "Copy",
+      copied: "Copied",
+      connect: "Log in with Spotify",
+      disconnect: "Disconnect",
+      connectedAs: (name) => `Connected: ${name}`,
+      search: "Search Spotify",
+      searchPlaceholder: "Track, artist or playlist",
+      searching: "Searching…",
+      noResults: "Nothing found",
+      tracks: "Tracks",
+      playlists: "Playlists",
+      nowPlaying: "Now playing",
+      play: "Play",
+      pause: "Pause",
+      next: "Next",
+      previous: "Previous",
+      premium: "Spotify Premium is required for browser playback.",
+      notConfigured: "Save a Client ID first.",
+      authError: "Could not connect to Spotify. Please try again.",
+      playbackError:
+        "Playback failed. Check that Spotify is not active on another device.",
+      networkError: "Network error. Check your connection.",
+      noDevice: "The player is not ready yet. Wait a few seconds.",
+      playerStarting: "Preparing the player…",
+      hint: "Playback uses the official Spotify Web Playback SDK.",
     },
     motion: "Reduce motion",
     motionDesc: "Turn off extra effects and movement",
@@ -819,6 +924,7 @@ const pl: Dict = {
     musicSources: {
       procedural: "Wbudowane",
       custom: "Moje utwory",
+      spotify: "Spotify",
     },
     uploadTrack: "Wgraj własny utwór",
     addTrack: "Dodaj utwór",
@@ -831,6 +937,41 @@ const pl: Dict = {
       unsupported: "To nie jest plik audio. Wybierz MP3, WAV, OGG lub M4A",
       tooMany: "Maksymalnie 10 utworów — usuń jeden",
       failed: "Nie udało się zapisać utworu. Spróbuj ponownie",
+    },
+    spotify: {
+      title: "Spotify",
+      setupTitle: "Połączenie ze Spotify",
+      setupDesc:
+        "Utwórz aplikację na developer.spotify.com, wklej jej Client ID i dodaj poniższy Redirect URI w ustawieniach aplikacji.",
+      clientId: "Client ID",
+      clientIdPlaceholder: "Wklej Client ID aplikacji",
+      save: "Zapisz",
+      redirectUri: "Redirect URI",
+      copy: "Kopiuj",
+      copied: "Skopiowano",
+      connect: "Zaloguj się przez Spotify",
+      disconnect: "Odłącz",
+      connectedAs: (name) => `Połączono: ${name}`,
+      search: "Szukaj w Spotify",
+      searchPlaceholder: "Utwór, wykonawca lub playlista",
+      searching: "Szukam…",
+      noResults: "Nic nie znaleziono",
+      tracks: "Utwory",
+      playlists: "Playlisty",
+      nowPlaying: "Teraz gra",
+      play: "Odtwórz",
+      pause: "Pauza",
+      next: "Następny",
+      previous: "Poprzedni",
+      premium: "Do odtwarzania w przeglądarce potrzebny jest Spotify Premium.",
+      notConfigured: "Najpierw zapisz Client ID.",
+      authError: "Nie udało się połączyć ze Spotify. Spróbuj ponownie.",
+      playbackError:
+        "Nie udało się odtworzyć. Sprawdź, czy Spotify nie działa na innym urządzeniu.",
+      networkError: "Błąd sieci. Sprawdź połączenie.",
+      noDevice: "Odtwarzacz nie jest jeszcze gotowy. Poczekaj kilka sekund.",
+      playerStarting: "Przygotowuję odtwarzacz…",
+      hint: "Odtwarzanie działa przez oficjalny Spotify Web Playback SDK.",
     },
     motion: "Mniej animacji",
     motionDesc: "Wyłącz dodatkowe efekty i ruch",
@@ -1071,6 +1212,7 @@ const de: Dict = {
     musicSources: {
       procedural: "Integriert",
       custom: "Meine Tracks",
+      spotify: "Spotify",
     },
     uploadTrack: "Eigenen Track hochladen",
     addTrack: "Track hinzufügen",
@@ -1083,6 +1225,41 @@ const de: Dict = {
       unsupported: "Das ist keine Audiodatei. Wähle MP3, WAV, OGG oder M4A",
       tooMany: "Maximal 10 Tracks — entferne zuerst einen",
       failed: "Track konnte nicht gespeichert werden. Bitte erneut versuchen",
+    },
+    spotify: {
+      title: "Spotify",
+      setupTitle: "Spotify verbinden",
+      setupDesc:
+        "Erstelle eine App auf developer.spotify.com, füge die Client ID ein und trage die folgende Redirect URI in den App-Einstellungen ein.",
+      clientId: "Client ID",
+      clientIdPlaceholder: "Client ID der App einfügen",
+      save: "Speichern",
+      redirectUri: "Redirect URI",
+      copy: "Kopieren",
+      copied: "Kopiert",
+      connect: "Mit Spotify anmelden",
+      disconnect: "Trennen",
+      connectedAs: (name) => `Verbunden: ${name}`,
+      search: "Spotify durchsuchen",
+      searchPlaceholder: "Titel, Künstler oder Playlist",
+      searching: "Suche…",
+      noResults: "Nichts gefunden",
+      tracks: "Titel",
+      playlists: "Playlists",
+      nowPlaying: "Läuft gerade",
+      play: "Abspielen",
+      pause: "Pause",
+      next: "Weiter",
+      previous: "Zurück",
+      premium: "Für die Wiedergabe im Browser ist Spotify Premium erforderlich.",
+      notConfigured: "Speichere zuerst eine Client ID.",
+      authError: "Verbindung zu Spotify fehlgeschlagen. Bitte erneut versuchen.",
+      playbackError:
+        "Wiedergabe fehlgeschlagen. Prüfe, ob Spotify auf einem anderen Gerät läuft.",
+      networkError: "Netzwerkfehler. Prüfe die Verbindung.",
+      noDevice: "Der Player ist noch nicht bereit. Warte ein paar Sekunden.",
+      playerStarting: "Player wird vorbereitet…",
+      hint: "Die Wiedergabe nutzt das offizielle Spotify Web Playback SDK.",
     },
     motion: "Weniger Animationen",
     motionDesc: "Zusätzliche Effekte und Bewegung ausschalten",
@@ -1330,6 +1507,7 @@ const es: Dict = {
     musicSources: {
       procedural: "Integradas",
       custom: "Mis pistas",
+      spotify: "Spotify",
     },
     uploadTrack: "Sube tu pista",
     addTrack: "Añadir pista",
@@ -1342,6 +1520,41 @@ const es: Dict = {
       unsupported: "No es un archivo de audio. Elige MP3, WAV, OGG o M4A",
       tooMany: "Máximo 10 pistas: elimina una primero",
       failed: "No se pudo guardar la pista. Inténtalo de nuevo",
+    },
+    spotify: {
+      title: "Spotify",
+      setupTitle: "Conectar Spotify",
+      setupDesc:
+        "Crea una app en developer.spotify.com, pega su Client ID y añade el Redirect URI de abajo en los ajustes de la app.",
+      clientId: "Client ID",
+      clientIdPlaceholder: "Pega el Client ID de la app",
+      save: "Guardar",
+      redirectUri: "Redirect URI",
+      copy: "Copiar",
+      copied: "Copiado",
+      connect: "Iniciar sesión con Spotify",
+      disconnect: "Desconectar",
+      connectedAs: (name) => `Conectado: ${name}`,
+      search: "Buscar en Spotify",
+      searchPlaceholder: "Canción, artista o playlist",
+      searching: "Buscando…",
+      noResults: "No se encontró nada",
+      tracks: "Canciones",
+      playlists: "Playlists",
+      nowPlaying: "Reproduciendo",
+      play: "Reproducir",
+      pause: "Pausa",
+      next: "Siguiente",
+      previous: "Anterior",
+      premium: "Se necesita Spotify Premium para reproducir en el navegador.",
+      notConfigured: "Guarda primero un Client ID.",
+      authError: "No se pudo conectar con Spotify. Inténtalo de nuevo.",
+      playbackError:
+        "No se pudo reproducir. Comprueba que Spotify no esté activo en otro dispositivo.",
+      networkError: "Error de red. Comprueba la conexión.",
+      noDevice: "El reproductor aún no está listo. Espera unos segundos.",
+      playerStarting: "Preparando el reproductor…",
+      hint: "La reproducción usa el Spotify Web Playback SDK oficial.",
     },
     motion: "Reducir animaciones",
     motionDesc: "Desactiva efectos y movimiento extra",
@@ -1595,6 +1808,7 @@ const fr: Dict = {
     musicSources: {
       procedural: "Intégrées",
       custom: "Mes pistes",
+      spotify: "Spotify",
     },
     uploadTrack: "Importer ta piste",
     addTrack: "Ajouter une piste",
@@ -1607,6 +1821,41 @@ const fr: Dict = {
       unsupported: "Ce n'est pas un fichier audio. Choisis MP3, WAV, OGG ou M4A",
       tooMany: "10 pistes maximum — supprime-en une",
       failed: "Impossible d'enregistrer la piste. Réessaie",
+    },
+    spotify: {
+      title: "Spotify",
+      setupTitle: "Connecter Spotify",
+      setupDesc:
+        "Crée une application sur developer.spotify.com, colle son Client ID et ajoute l'URI de redirection ci-dessous dans les réglages de l'application.",
+      clientId: "Client ID",
+      clientIdPlaceholder: "Colle le Client ID de l'application",
+      save: "Enregistrer",
+      redirectUri: "URI de redirection",
+      copy: "Copier",
+      copied: "Copié",
+      connect: "Se connecter avec Spotify",
+      disconnect: "Déconnecter",
+      connectedAs: (name) => `Connecté : ${name}`,
+      search: "Rechercher sur Spotify",
+      searchPlaceholder: "Titre, artiste ou playlist",
+      searching: "Recherche…",
+      noResults: "Aucun résultat",
+      tracks: "Titres",
+      playlists: "Playlists",
+      nowPlaying: "En lecture",
+      play: "Lire",
+      pause: "Pause",
+      next: "Suivant",
+      previous: "Précédent",
+      premium: "Spotify Premium est requis pour la lecture dans le navigateur.",
+      notConfigured: "Enregistre d'abord un Client ID.",
+      authError: "Impossible de se connecter à Spotify. Réessaie.",
+      playbackError:
+        "La lecture a échoué. Vérifie que Spotify n'est pas actif sur un autre appareil.",
+      networkError: "Erreur réseau. Vérifie la connexion.",
+      noDevice: "Le lecteur n'est pas encore prêt. Patiente quelques secondes.",
+      playerStarting: "Préparation du lecteur…",
+      hint: "La lecture utilise le Spotify Web Playback SDK officiel.",
     },
     motion: "Réduire les animations",
     motionDesc: "Désactiver les effets et mouvements superflus",

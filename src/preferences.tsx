@@ -24,10 +24,10 @@ export const MUSIC_STYLES: MusicStyle[] = [
   "night",
 ];
 
-/** Where the workout soundtrack comes from: synthesised loops or the user's file. */
-export type MusicSource = "procedural" | "custom";
+/** Where the workout soundtrack comes from: synth loops, a user file or Spotify. */
+export type MusicSource = "procedural" | "custom" | "spotify";
 
-export const MUSIC_SOURCES: MusicSource[] = ["procedural", "custom"];
+export const MUSIC_SOURCES: MusicSource[] = ["procedural", "custom", "spotify"];
 
 export type BackgroundId =
   | "aurora"

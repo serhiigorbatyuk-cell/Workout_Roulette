@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import {
   Bot,
   X,
@@ -23,6 +23,14 @@ import {
   Upload,
   FileMusic,
   Loader2,
+  Search,
+  LogIn,
+  LogOut,
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Copy,
 } from "lucide-react";
 import { COACH_MODELS, type CoachSettings } from "@/data/aiCoach";
 import {
@@ -33,6 +41,7 @@ import {
   type Preferences,
 } from "@/preferences";
 import type { CustomTrackError, CustomTrackMeta } from "@/customTrack";
+import type { SpotifyController, SpotifyItem } from "@/spotify";
 import { useI18n } from "@/i18n";
 
 interface SettingsDrawerProps {
@@ -51,6 +60,7 @@ interface SettingsDrawerProps {
   onSelectTrack: (id: string) => void;
   onRemoveTrack: (id: string) => void | Promise<void>;
   onClearTrackError: () => void;
+  spotify: SpotifyController;
 }
 
 interface ApiKey {
@@ -94,6 +104,7 @@ export function SettingsDrawer({
   onSelectTrack,
   onRemoveTrack,
   onClearTrackError,
+  spotify,
 }: SettingsDrawerProps) {
   const { t } = useI18n();
   const s = t.settings;
@@ -347,7 +358,7 @@ export function SettingsDrawer({
                         );
                       })}
                     </div>
-                  ) : (
+                  ) : prefs.musicSource === "custom" ? (
                     <div className="px-0.5 pb-0.5 pt-1.5">
                       {customTracks.length > 0 ? (
                         <ul className="space-y-1">
@@ -466,6 +477,11 @@ export function SettingsDrawer({
                         onChange={handleTrackFile}
                       />
                     </div>
+                  ) : (
+                    <SpotifyPanel
+                      spotify={spotify}
+                      onEnableMusic={() => onPrefsChange({ music: true })}
+                    />
                   )}
 
                   <div className="mt-1.5 flex items-center gap-2.5 rounded-lg border border-white/5 bg-slate-900/50 px-2.5 py-1.5">
@@ -786,6 +802,316 @@ export function SettingsDrawer({
         </div>
       </aside>
     </>
+  );
+}
+
+function SpotifyPanel({
+  spotify,
+  onEnableMusic,
+}: {
+  spotify: SpotifyController;
+  onEnableMusic: () => void;
+}) {
+  const { t } = useI18n();
+  const s = t.appearance.spotify;
+  const { search } = spotify;
+  const [clientId, setClientId] = useState(spotify.clientId);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SpotifyItem[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setClientId(spotify.clientId);
+  }, [spotify.clientId]);
+
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (trimmed.length < 2) {
+      setResults([]);
+      setSearching(false);
+      return;
+    }
+
+    let active = true;
+    setSearching(true);
+    const timer = window.setTimeout(() => {
+      void search(trimmed).then((items) => {
+        if (!active) return;
+        setResults(items);
+        setSearching(false);
+      });
+    }, 400);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [query, search]);
+
+  async function copyRedirect() {
+    try {
+      await navigator.clipboard.writeText(spotify.redirectUri);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      // clipboard may be unavailable
+    }
+  }
+
+  const errorText =
+    spotify.error === "premium"
+      ? s.premium
+      : spotify.error === "notConfigured"
+        ? s.notConfigured
+        : spotify.error === "auth"
+          ? s.authError
+          : spotify.error === "network"
+            ? s.networkError
+            : spotify.error === "noDevice"
+              ? s.noDevice
+              : spotify.error === "playback"
+                ? s.playbackError
+                : null;
+
+  if (spotify.status !== "connected") {
+    return (
+      <div className="px-0.5 pb-0.5 pt-1.5">
+        <p className="text-[11px] font-semibold text-slate-200">{s.setupTitle}</p>
+        <p className="mt-0.5 text-[10px] leading-snug text-slate-500">{s.setupDesc}</p>
+
+        <input
+          value={clientId}
+          onChange={(event) => setClientId(event.target.value)}
+          placeholder={s.clientIdPlaceholder}
+          aria-label={s.clientId}
+          className="mt-1.5 w-full rounded-lg border border-white/10 bg-slate-900 px-2.5 py-1.5 text-[11px] text-white outline-none placeholder:text-slate-600 focus:border-brand-400/50"
+        />
+        <button
+          onClick={() => spotify.saveClientId(clientId)}
+          disabled={!clientId.trim()}
+          className="mt-1.5 w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 transition-all hover:bg-white/10 active:scale-[0.99] disabled:opacity-40"
+        >
+          {s.save}
+        </button>
+
+        <div className="mt-1.5 rounded-lg border border-white/10 bg-slate-950/70 px-2 py-1.5">
+          <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-500">
+            {s.redirectUri}
+          </p>
+          <div className="mt-0.5 flex items-center gap-1.5">
+            <code className="min-w-0 flex-1 truncate font-mono text-[10px] text-slate-300">
+              {spotify.redirectUri}
+            </code>
+            <button
+              onClick={() => void copyRedirect()}
+              aria-label={s.copy}
+              title={s.copy}
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-white/5 hover:text-brand-300"
+            >
+              {copied ? (
+                <Check className="h-3.5 w-3.5 text-brand-300" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        <button
+          onClick={() => void spotify.login()}
+          disabled={!spotify.clientId || spotify.status === "connecting"}
+          className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-400 px-3 py-2 text-[11px] font-bold text-slate-950 transition-all hover:bg-brand-300 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {spotify.status === "connecting" ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <LogIn className="h-3.5 w-3.5" />
+          )}
+          {s.connect}
+        </button>
+
+        {errorText && (
+          <p className="mt-1.5 text-[10px] leading-snug text-red-300">
+            {errorText}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-0.5 pb-0.5 pt-1.5">
+      <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900/70 px-1.5 py-1.5">
+        {spotify.profile?.image ? (
+          <img
+            src={spotify.profile.image}
+            alt=""
+            className="h-7 w-7 shrink-0 rounded-lg object-cover"
+          />
+        ) : (
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-400/15 text-brand-300">
+            <Music className="h-3.5 w-3.5" />
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[11px] font-semibold text-white">
+            {spotify.profile?.name ?? s.title}
+          </p>
+          <p className="truncate text-[10px] text-brand-300">
+            {spotify.profile?.product === "premium"
+              ? "Spotify Premium"
+              : "Spotify"}
+          </p>
+        </div>
+        <button
+          onClick={spotify.logout}
+          aria-label={s.disconnect}
+          title={s.disconnect}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-white/5 hover:text-red-400"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      <div className="mt-1.5 flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-950/70 px-2 py-1.5">
+        <Search className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={s.searchPlaceholder}
+          aria-label={s.search}
+          className="min-w-0 flex-1 bg-transparent text-[11px] text-white outline-none placeholder:text-slate-600"
+        />
+        {searching && (
+          <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-brand-300" />
+        )}
+      </div>
+
+      {results.length > 0 && (
+        <ul className="mt-1.5 max-h-40 space-y-1 overflow-y-auto pr-0.5">
+          {results.map((item) => (
+            <li key={`${item.kind}:${item.uri}`}>
+              <button
+                onClick={() => {
+                  onEnableMusic();
+                  spotify.select(item);
+                }}
+                className="flex w-full items-center gap-2 rounded-lg border border-white/5 bg-slate-950/60 px-1.5 py-1.5 text-left transition-colors hover:border-brand-400/30 hover:bg-brand-400/5"
+              >
+                {item.image ? (
+                  <img
+                    src={item.image}
+                    alt=""
+                    className="h-7 w-7 shrink-0 rounded-md object-cover"
+                  />
+                ) : (
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/5 text-slate-400">
+                    <Music className="h-3.5 w-3.5" />
+                  </span>
+                )}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[11px] font-semibold text-slate-200">
+                    {item.name}
+                  </span>
+                  <span className="block truncate text-[10px] text-slate-500">
+                    {item.subtitle}
+                  </span>
+                </span>
+                <span className="shrink-0 rounded bg-white/5 px-1 py-0.5 text-[8px] uppercase tracking-wide text-slate-400">
+                  {item.kind === "track" ? s.tracks : s.playlists}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {query.trim().length >= 2 && !searching && results.length === 0 && (
+        <p className="mt-1.5 px-0.5 text-[10px] text-slate-500">
+          {s.noResults}
+        </p>
+      )}
+
+      {spotify.playback && (
+        <div className="mt-1.5 rounded-lg border border-brand-400/25 bg-brand-400/10 px-2 py-1.5">
+          <p className="text-[9px] font-semibold uppercase tracking-wide text-brand-300/80">
+            {s.nowPlaying}
+          </p>
+          <div className="mt-1 flex items-center gap-2">
+            {spotify.playback.image ? (
+              <img
+                src={spotify.playback.image}
+                alt=""
+                className="h-7 w-7 shrink-0 rounded-md object-cover"
+              />
+            ) : (
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-brand-400/15 text-brand-300">
+                <Music className="h-3.5 w-3.5" />
+              </span>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[11px] font-semibold text-white">
+                {spotify.playback.name}
+              </p>
+              <p className="truncate text-[10px] text-slate-400">
+                {spotify.playback.artists}
+              </p>
+            </div>
+          </div>
+          <div className="mt-1.5 flex items-center justify-center gap-3">
+            <button
+              onClick={() => void spotify.previous()}
+              aria-label={s.previous}
+              title={s.previous}
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-white/5 hover:text-white"
+            >
+              <SkipBack className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => {
+                onEnableMusic();
+                void spotify.toggle();
+              }}
+              aria-label={spotify.playback.paused ? s.play : s.pause}
+              title={spotify.playback.paused ? s.play : s.pause}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-400 text-slate-950 shadow-lg shadow-brand-500/25 transition-all hover:bg-brand-300 active:scale-95"
+            >
+              {spotify.playback.paused ? (
+                <Play className="h-4 w-4" />
+              ) : (
+                <Pause className="h-4 w-4" />
+              )}
+            </button>
+            <button
+              onClick={() => void spotify.next()}
+              aria-label={s.next}
+              title={s.next}
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-white/5 hover:text-white"
+            >
+              <SkipForward className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {spotify.initializing && (
+        <p className="mt-1.5 flex items-center gap-1.5 px-0.5 text-[10px] text-slate-500">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          {s.playerStarting}
+        </p>
+      )}
+
+      {errorText && (
+        <p className="mt-1.5 px-0.5 text-[10px] leading-snug text-red-300">
+          {errorText}
+        </p>
+      )}
+
+      <p className="mt-1.5 px-0.5 text-[10px] leading-snug text-slate-500">
+        {s.hint}
+      </p>
+    </div>
   );
 }
 
