@@ -8,9 +8,12 @@ import {
   Settings,
   Music,
   VolumeX,
+  Bell,
+  BellOff,
   Share2,
   Check,
   Trophy,
+  Wand2,
 } from "lucide-react";
 import {
   generateWorkout,
@@ -23,6 +26,7 @@ import {
   type Difficulty,
   type Exercise,
   type ExerciseCount,
+  type ExerciseId,
   type WorkoutType,
 } from "@/data/exercises";
 import {
@@ -52,11 +56,22 @@ import {
 import { WorkoutStats } from "@/components/WorkoutStats";
 import { WorkoutHistory } from "@/components/WorkoutHistory";
 import { RestTimer } from "@/components/RestTimer";
+import { WorkoutBuilder } from "@/components/WorkoutBuilder";
+import { FavoritesPanel } from "@/components/FavoritesPanel";
+import { ActivityCalendar } from "@/components/ActivityCalendar";
+import { MotivationQuote } from "@/components/MotivationQuote";
+import { ExerciseDemo } from "@/components/ExerciseDemo";
+import { WorkoutResultCard } from "@/components/WorkoutResultCard";
+import { useCustomWorkouts, useFavorites } from "@/library";
+import { useFeatureText } from "@/featuresI18n";
+import { playExerciseComplete, playFinish, playStart } from "@/sound";
+import { copyText } from "@/clipboard";
 
 type AppState = "empty" | "success" | "error";
 
 export default function App() {
   const { t } = useI18n();
+  const f = useFeatureText();
   const { prefs, update: updatePrefs, reset: resetPrefs } = usePreferences();
   const [difficulty, setDifficulty] = useState<Difficulty | "">("");
   const [workoutType, setWorkoutType] = useState<WorkoutType>("fullBody");
@@ -64,6 +79,9 @@ export default function App() {
   const [state, setState] = useState<AppState>("empty");
   const [spinning, setSpinning] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [builderOpen, setBuilderOpen] = useState(false);
+  const [demoExercise, setDemoExercise] = useState<ExerciseId | null>(null);
+  const [resultDismissed, setResultDismissed] = useState(false);
   const [settings, setSettings] = useState<CoachSettings>(DEFAULT_COACH_SETTINGS);
   const [shareFeedback, setShareFeedback] = useState(false);
   const [completed, setCompleted] = useState<boolean[]>([]);
@@ -71,9 +89,15 @@ export default function App() {
   const selectRef = useRef<HTMLSelectElement>(null);
   const outputRef = useRef<HTMLDivElement>(null);
 
-  const { stats, record: recordWorkout, clear: clearHistory } =
-    useWorkoutHistory();
+  const {
+    entries: historyEntries,
+    stats,
+    record: recordWorkout,
+    clear: clearHistory,
+  } = useWorkoutHistory();
   const recent = useRecentWorkouts();
+  const favorites = useFavorites();
+  const customWorkouts = useCustomWorkouts();
 
   const customTrack = useCustomTrack(prefs.customTrackId);
   const customActive =
@@ -193,7 +217,10 @@ export default function App() {
     recordedRef.current = false;
     setWorkout(next);
     setCompleted(next.map(() => false));
+    setResultDismissed(false);
     setState("success");
+
+    if (prefs.sound) playStart();
 
     if (meta.record !== false && nextDifficulty && next.length > 0) {
       recent.record({
@@ -280,10 +307,23 @@ export default function App() {
   }
 
   function toggleComplete(index: number) {
+    const markingDone = !completed[index];
     setCompleted((current) =>
       current.map((done, i) => (i === index ? !done : done)),
     );
+
+    if (!prefs.sound || !markingDone) return;
+    const total = workout?.length ?? 0;
+    // The finish fanfare covers the last exercise.
+    if (completedCount + 1 < total) playExerciseComplete();
   }
+
+  // Play the finish cue once the whole workout is checked off.
+  useEffect(() => {
+    if (!prefs.sound) return;
+    if (completed.length === 0) return;
+    if (completed.every(Boolean)) playFinish();
+  }, [completed, prefs.sound]);
 
   function handleReroll(index: number) {
     if (!workout || !difficulty) return;
@@ -335,6 +375,41 @@ export default function App() {
     });
     outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
+
+  function handleBuilderStart(ids: ExerciseId[], level: Difficulty) {
+    const next = buildWorkoutFromIds(ids, level);
+    if (next.length === 0) return;
+
+    setDifficulty(level);
+    setBuilderOpen(false);
+    applyWorkout(next, { difficulty: level });
+    window.setTimeout(
+      () =>
+        outputRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        }),
+      60,
+    );
+  }
+
+  function handleStartFavorites() {
+    if (favorites.favorites.length === 0) return;
+
+    const level = difficulty || "beginner";
+    const next = buildWorkoutFromIds(favorites.favorites, level);
+    if (next.length === 0) return;
+
+    setDifficulty(level);
+    applyWorkout(next, { difficulty: level });
+    outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  // A dismissed result comes back only after the user unchecks and re-finishes.
+  useEffect(() => {
+    if (completed.length === 0) return;
+    if (!completed.every(Boolean)) setResultDismissed(false);
+  }, [completed]);
 
   // Record a workout once, as soon as every exercise is marked as done.
   useEffect(() => {
@@ -398,9 +473,11 @@ export default function App() {
     }
 
     try {
-      await navigator.clipboard.writeText(text);
-      setShareFeedback(true);
-      window.setTimeout(() => setShareFeedback(false), 2200);
+      const copied = await copyText(text);
+      if (copied) {
+        setShareFeedback(true);
+        window.setTimeout(() => setShareFeedback(false), 2200);
+      }
     } catch {
       // clipboard is unavailable — nothing else we can do
     }
@@ -449,6 +526,25 @@ export default function App() {
             {/* header */}
             <header className="w-full max-w-md">
               <div className="flex items-center justify-end gap-2">
+                <button
+                  onClick={() => updatePrefs({ sound: !prefs.sound })}
+                  aria-pressed={prefs.sound}
+                  aria-label={f.sounds.toggle}
+                  title={`${f.sounds.toggle} · ${
+                    prefs.sound ? f.sounds.on : f.sounds.off
+                  }`}
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border transition-all active:scale-95 sm:h-11 sm:w-11 ${
+                    prefs.sound
+                      ? "border-brand-400/40 bg-brand-400/15 text-brand-300 shadow-lg shadow-brand-500/10"
+                      : "border-white/10 bg-slate-900/80 text-slate-300 hover:border-brand-400/40 hover:text-brand-300"
+                  }`}
+                >
+                  {prefs.sound ? (
+                    <Bell className="h-5 w-5" />
+                  ) : (
+                    <BellOff className="h-5 w-5" />
+                  )}
+                </button>
                 <button
                   onClick={() => updatePrefs({ music: !prefs.music })}
                   aria-pressed={prefs.music}
@@ -588,6 +684,14 @@ export default function App() {
                 {t.daily}
               </button>
 
+              <button
+                onClick={() => setBuilderOpen(true)}
+                className="group mt-2.5 flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-slate-900/60 px-6 py-3 text-sm font-semibold text-slate-300 transition-all hover:border-brand-400/40 hover:text-brand-300 active:scale-[0.98]"
+              >
+                <Wand2 className="h-4 w-4 transition-transform group-hover:-rotate-12" />
+                {f.builder.open}
+              </button>
+
               {/* error message */}
               {state === "error" && (
                 <div
@@ -634,6 +738,19 @@ export default function App() {
 
           {state === "success" && workout && (
             <>
+              {completedCount === workout.length &&
+                workout.length > 0 &&
+                !resultDismissed && (
+                  <WorkoutResultCard
+                    workout={workout}
+                    difficulty={difficulty || "beginner"}
+                    workoutType={workoutType}
+                    minutes={duration}
+                    onClose={() => setResultDismissed(true)}
+                    onAgain={handleSpin}
+                  />
+                )}
+
               <div className="mb-6 flex flex-col items-center gap-1 text-center">
                 <p className="text-sm font-medium text-brand-400">
                   {t.ready}
@@ -687,7 +804,10 @@ export default function App() {
                     exercise={ex}
                     index={i}
                     completed={completed[i] ?? false}
+                    favorite={favorites.has(ex.id)}
                     onToggleComplete={() => toggleComplete(i)}
+                    onToggleFavorite={() => favorites.toggle(ex.id)}
+                    onShowDemo={() => setDemoExercise(ex.id)}
                     onReroll={() => handleReroll(i)}
                   />
                 ))}
@@ -731,6 +851,17 @@ export default function App() {
           )}
         </div>
 
+        <MotivationQuote />
+
+        <FavoritesPanel
+          favorites={favorites.favorites}
+          onRemove={favorites.remove}
+          onClear={favorites.clear}
+          onStart={handleStartFavorites}
+        />
+
+        <ActivityCalendar entries={historyEntries} />
+
         <WorkoutHistory
           entries={recent.entries}
           onLoad={handleLoadHistory}
@@ -764,6 +895,21 @@ export default function App() {
         onRemoveTrack={handleRemoveTrack}
         onClearTrackError={customTrack.clearError}
         spotify={spotify}
+      />
+
+      <WorkoutBuilder
+        open={builderOpen}
+        initialDifficulty={difficulty}
+        customWorkouts={customWorkouts.workouts}
+        onClose={() => setBuilderOpen(false)}
+        onStart={handleBuilderStart}
+        onSaveWorkout={customWorkouts.save}
+        onDeleteWorkout={customWorkouts.remove}
+      />
+
+      <ExerciseDemo
+        exerciseId={demoExercise}
+        onClose={() => setDemoExercise(null)}
       />
     </div>
   );

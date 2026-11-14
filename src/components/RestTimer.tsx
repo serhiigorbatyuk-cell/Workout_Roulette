@@ -1,8 +1,15 @@
 import { useEffect, useState } from "react";
-import { Pause, Play, RotateCcw, Timer } from "lucide-react";
+import {
+  Pause,
+  Play,
+  RotateCcw,
+  SkipForward,
+  Timer,
+} from "lucide-react";
 import { useI18n } from "@/i18n";
 import { usePreferences } from "@/preferences";
-import { playBeep } from "@/sound";
+import { useFeatureText } from "@/featuresI18n";
+import { playRest, playTick } from "@/sound";
 
 const PRESETS = [30, 45, 60];
 const DEFAULT_DURATION = 45;
@@ -10,6 +17,7 @@ const DEFAULT_DURATION = 45;
 export function RestTimer() {
   const { t } = useI18n();
   const { prefs } = usePreferences();
+  const f = useFeatureText();
   const [duration, setDuration] = useState(DEFAULT_DURATION);
   const [remaining, setRemaining] = useState(DEFAULT_DURATION);
   const [running, setRunning] = useState(false);
@@ -30,8 +38,14 @@ export function RestTimer() {
   // Cue once when the countdown reaches zero.
   useEffect(() => {
     if (remaining !== 0 || !prefs.sound) return;
-    playBeep();
+    playRest();
   }, [remaining, prefs.sound]);
+
+  // Quiet tick for the final three seconds.
+  useEffect(() => {
+    if (!running || !prefs.sound) return;
+    if (remaining > 0 && remaining <= 3) playTick();
+  }, [remaining, running, prefs.sound]);
 
   function selectPreset(seconds: number) {
     setDuration(seconds);
@@ -48,6 +62,11 @@ export function RestTimer() {
     setRunning((value) => !value);
   }
 
+  function skip() {
+    setRunning(false);
+    setRemaining(0);
+  }
+
   function reset() {
     setRemaining(duration);
     setRunning(false);
@@ -56,6 +75,7 @@ export function RestTimer() {
   const progress =
     duration > 0 ? ((duration - remaining) / duration) * 100 : 0;
   const isDone = remaining === 0;
+  const mainLabel = running ? f.rest.pause : isDone ? t.start : f.rest.resume;
 
   return (
     <div
@@ -90,7 +110,7 @@ export function RestTimer() {
         </div>
       </div>
 
-      <div className="mt-2 flex items-center gap-2">
+      <div className="mt-2 flex items-baseline gap-2">
         <span
           className={`text-2xl font-black tabular-nums tracking-tight ${
             isDone ? "text-brand-400" : "text-white"
@@ -104,31 +124,42 @@ export function RestTimer() {
             {t.restDone}
           </span>
         )}
+      </div>
 
-        <div className="ml-auto flex items-center gap-1.5">
-          <button
-            onClick={toggle}
-            aria-label={running ? t.pause : t.start}
-            title={running ? t.pause : t.start}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-400/10 text-brand-300 ring-1 ring-brand-400/30 transition-all hover:bg-brand-400/20 hover:scale-105 active:scale-95"
-          >
-            {isDone ? (
-              <RotateCcw className="h-4 w-4" />
-            ) : running ? (
-              <Pause className="h-4 w-4" />
-            ) : (
-              <Play className="h-4 w-4" />
-            )}
-          </button>
-          <button
-            onClick={reset}
-            aria-label={t.restReset}
-            title={t.restReset}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-400 transition-all hover:border-brand-400/40 hover:text-brand-300 active:scale-95"
-          >
-            <RotateCcw className="h-4 w-4" />
-          </button>
-        </div>
+      <div className="mt-2 flex items-center gap-1.5">
+        <button
+          onClick={toggle}
+          aria-label={mainLabel}
+          title={mainLabel}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-brand-400/25 bg-brand-400/10 px-2 py-1.5 text-[10px] font-bold text-brand-300 transition-all hover:bg-brand-400/20 active:scale-95"
+        >
+          {isDone ? (
+            <RotateCcw className="h-3.5 w-3.5" />
+          ) : running ? (
+            <Pause className="h-3.5 w-3.5" />
+          ) : (
+            <Play className="h-3.5 w-3.5" />
+          )}
+          {mainLabel}
+        </button>
+        <button
+          onClick={skip}
+          disabled={isDone}
+          aria-label={f.rest.skip}
+          title={f.rest.skip}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-[10px] font-semibold text-slate-300 transition-all hover:border-brand-400/30 hover:text-brand-300 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <SkipForward className="h-3.5 w-3.5" />
+          {f.rest.skip}
+        </button>
+        <button
+          onClick={reset}
+          aria-label={t.restReset}
+          title={t.restReset}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-400 transition-all hover:border-brand-400/40 hover:text-brand-300 active:scale-95"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+        </button>
       </div>
 
       <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/5">

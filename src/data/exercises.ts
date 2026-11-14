@@ -351,6 +351,14 @@ export function pickExercise(
   return createExercise(id, difficulty);
 }
 
+/** Every exercise in the catalogue, in a stable order (builder + favorites). */
+export const ALL_EXERCISE_IDS: ExerciseId[] = ALL_IDS;
+
+/** Icon used by compact lists outside the workout cards. */
+export function getExerciseIcon(id: ExerciseId): LucideIcon {
+  return ICONS[id];
+}
+
 export const DIFFICULTIES: Difficulty[] = ["beginner", "intermediate", "pro"];
 export const WORKOUT_TYPES: WorkoutType[] = [
   "fullBody",

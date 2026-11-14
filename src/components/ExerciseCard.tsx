@@ -1,15 +1,27 @@
 import { useEffect, useState } from "react";
 import type { Exercise } from "@/data/exercises";
-import { Check, Play, Pause, RefreshCw, RotateCcw } from "lucide-react";
+import {
+  Check,
+  CircleHelp,
+  Heart,
+  Play,
+  Pause,
+  RefreshCw,
+  RotateCcw,
+} from "lucide-react";
 import { useI18n } from "@/i18n";
 import { usePreferences } from "@/preferences";
-import { playBeep } from "@/sound";
+import { useFeatureText } from "@/featuresI18n";
+import { playExerciseComplete, playTick } from "@/sound";
 
 interface ExerciseCardProps {
   exercise: Exercise;
   index: number;
   completed: boolean;
+  favorite: boolean;
   onToggleComplete: () => void;
+  onToggleFavorite: () => void;
+  onShowDemo: () => void;
   onReroll: () => void;
 }
 
@@ -17,11 +29,15 @@ export function ExerciseCard({
   exercise,
   index,
   completed,
+  favorite,
   onToggleComplete,
+  onToggleFavorite,
+  onShowDemo,
   onReroll,
 }: ExerciseCardProps) {
   const { t } = useI18n();
   const { prefs } = usePreferences();
+  const f = useFeatureText();
   const text = t.exercises[exercise.id];
   const Icon = exercise.icon;
   const isTimeMode = exercise.mode === "time";
@@ -45,13 +61,19 @@ export function ExerciseCard({
     return () => clearInterval(id);
   }, [running, isTimeMode, remaining]);
 
-  // Beep once when the countdown reaches zero.
+  // Cue once when the countdown reaches zero.
   useEffect(() => {
     if (!isTimeMode || totalSeconds === 0) return;
     if (remaining !== 0) return;
     if (!prefs.sound) return;
-    playBeep();
+    playExerciseComplete();
   }, [remaining, isTimeMode, totalSeconds, prefs.sound]);
+
+  // Quiet tick for the final three seconds.
+  useEffect(() => {
+    if (!running || !isTimeMode || !prefs.sound) return;
+    if (remaining > 0 && remaining <= 3) playTick();
+  }, [remaining, running, isTimeMode, prefs.sound]);
 
   function toggleTimer() {
     if (isDone) {
@@ -89,6 +111,23 @@ export function ExerciseCard({
             {t.exercise} {index + 1}
           </span>
           <button
+            onClick={onToggleFavorite}
+            aria-pressed={favorite}
+            aria-label={favorite ? f.favorites.remove : f.favorites.add}
+            title={favorite ? f.favorites.remove : f.favorites.add}
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-all active:scale-90 ${
+              favorite
+                ? "border-rose-400/50 bg-rose-400/15 text-rose-300 shadow-lg shadow-rose-500/10"
+                : "border-white/15 bg-white/5 text-slate-400 hover:border-rose-400/50 hover:text-rose-300"
+            }`}
+          >
+            <Heart
+              className={`h-4 w-4 transition-transform ${
+                favorite ? "fill-current scale-110" : ""
+              }`}
+            />
+          </button>
+          <button
             onClick={onReroll}
             aria-label={t.reroll}
             title={t.reroll}
@@ -114,6 +153,14 @@ export function ExerciseCard({
 
       <h3 className="relative mt-4 text-xl font-bold text-white sm:mt-5">{text.name}</h3>
       <p className="relative mt-1 text-sm leading-relaxed text-slate-400">{text.cue}</p>
+
+      <button
+        onClick={onShowDemo}
+        className="relative mt-3 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-slate-300 transition-all hover:border-brand-400/40 hover:text-brand-300 active:scale-95"
+      >
+        <CircleHelp className="h-3.5 w-3.5" />
+        {f.demo.open}
+      </button>
 
       <div className="relative mt-4 flex items-center justify-between sm:mt-5">
         {isTimeMode ? (
